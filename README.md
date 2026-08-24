@@ -26,6 +26,26 @@ Connect this server to Claude Desktop or Claude Code, and ask your WHOOP data qu
 
 Everything runs locally. Your data never touches a third-party server, and only you can access it.
 
+## Honest expectations
+
+Ask this server for your recovery score today, and you get the same number you'd see by opening the WHOOP app. WHOOP already runs a coach LLM trained on your data, and it's good at explaining what's happening in your body. Reading your own metrics through Claude instead of the app doesn't beat that by itself.
+
+This project exists to lay the groundwork for something bigger: your own tools talking to the WHOOP API directly, on your terms. Right now that means read-only access. WHOOP has said new API capabilities are coming, without saying what they are. My guess: personalized training plans a coach pushes straight into your app, shared workouts between users, automatic blood panel uploads. None of that is confirmed. When write access lands, whatever form it takes, this server becomes the layer your agent uses to act on your WHOOP account.
+
+## What this is good for today
+
+The real value here is connecting your data to systems WHOOP's app has no reason to talk to.
+
+Set up a scheduled agent that pulls your recovery, sleep, and yesterday's strain each morning, and sends a plain-language summary to wherever you look first: a Slack channel, an email, a spreadsheet you keep for training. Point that same feed at your coach, so they plan your session from your real numbers instead of your description of how you felt.
+
+A few more ideas worth trying:
+
+- **Cross-reference WHOOP with what it can't see.** Connect this alongside a calendar or notes MCP in the same conversation, and ask questions WHOOP's coach structurally can't answer: does your recovery drop in weeks with more meetings? Does sleep efficiency track your training log?
+- **Let recovery drive actions in other apps.** WHOOP only reads your body. Wire this into an agent that also holds your calendar or task manager, and let low recovery trigger something: push non-essential meetings, cancel a planned hard session, remind you to hydrate before a flight.
+- **Give a coach real-time visibility before WHOOP ships it.** WHOOP has said workout sharing is coming. Until it does, a coach can already read an athlete's metrics through this server the moment the athlete authorizes it, no waiting on WHOOP's release schedule.
+
+Got a use case that fits here? Open an issue or a PR.
+
 ## Setup
 
 **1. Create a WHOOP app.** Go to the [WHOOP Developer Dashboard](https://developer.whoop.com) and create a new app. You'll need this because WHOOP requires every integration to authenticate with its own credentials (see [Why your own app?](#why-your-own-app) below).
