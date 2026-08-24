@@ -1,7 +1,7 @@
-"""Permite lanzar el servidor con `python -m whoop_mcp`.
+"""Lets the server run via `python -m whoop_mcp`.
 
-Necesario porque los entry points de consola usan un shebang que se rompe
-cuando la ruta del proyecto contiene espacios (p. ej. dentro de iCloud Drive).
+Needed because console entry points use a shebang line that breaks when the
+project path contains spaces (e.g. inside iCloud Drive).
 """
 
 from .server import main

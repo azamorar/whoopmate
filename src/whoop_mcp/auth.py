@@ -1,4 +1,4 @@
-"""Gestion de tokens OAuth2: almacenamiento, intercambio de codigo y refresh."""
+"""OAuth2 token management: storage, code exchange, and refresh."""
 
 from __future__ import annotations
 
@@ -12,22 +12,22 @@ import requests
 
 from .config import AUTH_URL, SCOPES, TOKEN_URL, Settings
 
-# Renovamos el access token con este margen antes de que caduque.
+# Renew the access token this many seconds before it expires.
 _EXPIRY_MARGIN_SECONDS = 60
 
 
 class AuthError(RuntimeError):
-    """Error de autenticacion contra WHOOP."""
+    """Authentication error against WHOOP."""
 
 
 class TokenManager:
-    """Guarda los tokens en disco y renueva el access token cuando caduca."""
+    """Stores tokens on disk and renews the access token when it expires."""
 
     def __init__(self, settings: Settings) -> None:
         self._settings = settings
 
     # ------------------------------------------------------------------
-    # Almacenamiento
+    # Storage
     # ------------------------------------------------------------------
     def load_tokens(self) -> dict[str, Any] | None:
         path = self._settings.token_file
@@ -39,7 +39,7 @@ class TokenManager:
             return None
 
     def save_tokens(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Normaliza la respuesta del endpoint de token y la persiste."""
+        """Normalizes the token endpoint response and persists it."""
         tokens = {
             "access_token": payload["access_token"],
             "refresh_token": payload.get("refresh_token"),
@@ -54,10 +54,10 @@ class TokenManager:
         return tokens
 
     # ------------------------------------------------------------------
-    # Flujo OAuth2
+    # OAuth2 flow
     # ------------------------------------------------------------------
     def exchange_code(self, code: str) -> dict[str, Any]:
-        """Intercambia el authorization code por tokens (paso final del login)."""
+        """Exchanges the authorization code for tokens (final login step)."""
         payload = self._request_token(
             {
                 "grant_type": "authorization_code",
@@ -68,7 +68,7 @@ class TokenManager:
         return self.save_tokens(payload)
 
     def refresh(self, refresh_token: str) -> dict[str, Any]:
-        """Renueva el access token. WHOOP rota el refresh token: hay que guardarlo."""
+        """Renews the access token. WHOOP rotates the refresh token, so it must be saved."""
         payload = self._request_token(
             {
                 "grant_type": "refresh_token",
@@ -79,12 +79,13 @@ class TokenManager:
         return self.save_tokens(payload)
 
     def get_access_token(self) -> str:
-        """Devuelve un access token valido, renovandolo si esta caducado."""
+        """Returns a valid access token, renewing it if expired."""
         tokens = self.load_tokens()
         if tokens is None:
             raise AuthError(
-                "No hay tokens guardados. Ejecuta primero `poetry run python -m whoop_mcp.auth_cli` "
-                "para autorizar el acceso a tu cuenta de WHOOP."
+                "No authorized WHOOP session yet. Call the `whoop_login` tool "
+                "to authorize access (it will open the user's browser), then "
+                "retry this call."
             )
 
         if time.time() < tokens.get("expires_at", 0) - _EXPIRY_MARGIN_SECONDS:
@@ -93,21 +94,22 @@ class TokenManager:
         refresh_token = tokens.get("refresh_token")
         if not refresh_token:
             raise AuthError(
-                "El access token ha caducado y no hay refresh token (falta el "
-                "scope 'offline'). Vuelve a ejecutar `poetry run python -m whoop_mcp.auth_cli`."
+                "The access token expired and there's no refresh token "
+                "(missing the 'offline' scope). Call the `whoop_login` tool "
+                "with `force=true` to re-authenticate."
             )
 
         refreshed = self.refresh(refresh_token)
         return refreshed["access_token"]
 
     def force_refresh(self) -> str:
-        """Fuerza una renovacion (util tras recibir un 401 inesperado)."""
+        """Forces a renewal (useful after an unexpected 401)."""
         tokens = self.load_tokens() or {}
         refresh_token = tokens.get("refresh_token")
         if not refresh_token:
             raise AuthError(
-                "Token invalido y sin refresh token disponible. "
-                "Vuelve a ejecutar `poetry run python -m whoop_mcp.auth_cli`."
+                "Invalid token and no refresh token available. Call the "
+                "`whoop_login` tool with `force=true` to re-authenticate."
             )
         refreshed = self.refresh(refresh_token)
         return refreshed["access_token"]
@@ -129,14 +131,14 @@ class TokenManager:
         )
         if response.status_code != 200:
             raise AuthError(
-                f"WHOOP devolvio {response.status_code} en el endpoint de token: "
+                f"WHOOP returned {response.status_code} from the token endpoint: "
                 f"{response.text}"
             )
         return response.json()
 
 
 def build_authorize_url(settings: Settings, state: str) -> str:
-    """URL de autorizacion para iniciar el flujo OAuth2 en el navegador."""
+    """Authorization URL to start the OAuth2 flow in the browser."""
     params = urlencode(
         {
             "response_type": "code",

@@ -1,4 +1,4 @@
-"""Tools de perfil y medidas corporales."""
+"""Profile and body measurement tools."""
 
 from __future__ import annotations
 
@@ -12,11 +12,11 @@ from ..client import WhoopClient
 def register(mcp: FastMCP, client: WhoopClient) -> None:
     @mcp.tool
     def get_profile() -> dict[str, Any]:
-        """Obtiene el perfil basico del usuario de WHOOP (nombre, email, user_id)."""
+        """Gets the WHOOP user's basic profile (name, email, user_id)."""
         return client.get("/v2/user/profile/basic")
 
     @mcp.tool
     def get_body_measurements() -> dict[str, Any]:
-        """Obtiene las medidas corporales del usuario: altura (m), peso (kg) y
-        frecuencia cardiaca maxima."""
+        """Gets the user's body measurements: height (m), weight (kg), and
+        max heart rate."""
         return client.get("/v2/user/measurement/body")

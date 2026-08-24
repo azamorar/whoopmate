@@ -1,4 +1,4 @@
-"""Tools de ciclos fisiologicos (dias WHOOP, incluyen el strain diario)."""
+"""Physiological cycle tools (WHOOP days, including daily strain)."""
 
 from __future__ import annotations
 
@@ -17,15 +17,15 @@ def register(mcp: FastMCP, client: WhoopClient) -> None:
         end: str | None = None,
         next_token: str | None = None,
     ) -> dict[str, Any]:
-        """Lista los ciclos fisiologicos del usuario (el "dia" de WHOOP), del mas
-        reciente al mas antiguo. Cada ciclo incluye el strain, kilojulios y
-        frecuencia cardiaca media/maxima.
+        """Lists the user's physiological cycles (WHOOP's "day"), most recent
+        first. Each cycle includes strain, kilojoules, and average/max heart
+        rate.
 
         Args:
-            limit: Numero de registros por pagina (max 25).
-            start: Fecha inicio, 'YYYY-MM-DD' o ISO 8601.
-            end: Fecha fin, 'YYYY-MM-DD' o ISO 8601.
-            next_token: Token de paginacion devuelto por una llamada anterior.
+            limit: Records per page (max 25).
+            start: Start date, 'YYYY-MM-DD' or ISO 8601.
+            end: End date, 'YYYY-MM-DD' or ISO 8601.
+            next_token: Pagination token returned by a previous call.
         """
         return client.get_collection(
             "/v2/cycle", limit=limit, start=start, end=end, next_token=next_token
@@ -33,5 +33,5 @@ def register(mcp: FastMCP, client: WhoopClient) -> None:
 
     @mcp.tool
     def get_cycle_by_id(cycle_id: int) -> dict[str, Any]:
-        """Obtiene un ciclo fisiologico concreto por su ID."""
+        """Gets a specific physiological cycle by its ID."""
         return client.get(f"/v2/cycle/{cycle_id}")

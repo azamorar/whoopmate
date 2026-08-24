@@ -1,4 +1,4 @@
-"""Configuracion del servidor: credenciales OAuth y rutas."""
+"""Server configuration: OAuth credentials and paths."""
 
 from __future__ import annotations
 
@@ -8,16 +8,16 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Carga .env desde el directorio del proyecto (raiz del repo) y desde el cwd.
+# Load .env from the project directory (repo root) and from the cwd.
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(_PROJECT_ROOT / ".env")
-load_dotenv()  # .env del cwd, si existe (no sobreescribe variables ya definidas)
+load_dotenv()  # .env in the cwd, if present (doesn't override already-set vars)
 
 AUTH_URL = "https://api.prod.whoop.com/oauth/oauth2/auth"
 TOKEN_URL = "https://api.prod.whoop.com/oauth/oauth2/token"
 API_BASE_URL = "https://api.prod.whoop.com/developer"
 
-# Scopes necesarios para las tools basicas. "offline" habilita el refresh token.
+# Scopes needed for the basic tools. "offline" enables the refresh token.
 SCOPES = (
     "read:profile read:body_measurement read:cycles "
     "read:recovery read:sleep read:workout offline"
@@ -27,7 +27,7 @@ DEFAULT_TOKEN_FILE = Path.home() / ".whoop-mcp" / "tokens.json"
 
 
 class ConfigError(RuntimeError):
-    """Error de configuracion (variables de entorno ausentes, etc.)."""
+    """Configuration error (missing environment variables, etc.)."""
 
 
 @dataclass(frozen=True)
@@ -44,16 +44,18 @@ def get_settings() -> Settings:
 
     if not client_id or not client_secret:
         raise ConfigError(
-            "Faltan WHOOP_CLIENT_ID y/o WHOOP_CLIENT_SECRET. "
-            "Copia .env.example a .env y rellena las credenciales de tu app "
-            "del Developer Dashboard de WHOOP (https://developer.whoop.com)."
+            "Missing WHOOP_CLIENT_ID and/or WHOOP_CLIENT_SECRET. "
+            "Copy .env.example to .env and fill in the credentials from your "
+            "app on the WHOOP Developer Dashboard (https://developer.whoop.com). "
+            "This can't be fixed from a tool call: ask the user to fill in "
+            "the project's .env file and restart the MCP server."
         )
 
     return Settings(
         client_id=client_id,
         client_secret=client_secret,
         redirect_uri=os.environ.get(
-            "WHOOP_REDIRECT_URI", "http://localhost:8765/callback"
+            "WHOOP_REDIRECT_URI", "http://localhost:8007/callback"
         ),
         token_file=Path(
             os.environ.get("WHOOP_TOKEN_FILE", str(DEFAULT_TOKEN_FILE))

@@ -1,4 +1,4 @@
-"""Tools de sueno (fases, eficiencia, deuda de sueno...)."""
+"""Sleep tools (stages, efficiency, sleep debt...)."""
 
 from __future__ import annotations
 
@@ -17,15 +17,14 @@ def register(mcp: FastMCP, client: WhoopClient) -> None:
         end: str | None = None,
         next_token: str | None = None,
     ) -> dict[str, Any]:
-        """Lista las sesiones de sueno del usuario, de la mas reciente a la mas
-        antigua. Incluye fases del sueno, eficiencia, sleep performance y si fue
-        una siesta.
+        """Lists the user's sleep sessions, most recent first. Includes sleep
+        stages, efficiency, sleep performance, and whether it was a nap.
 
         Args:
-            limit: Numero de registros por pagina (max 25).
-            start: Fecha inicio, 'YYYY-MM-DD' o ISO 8601.
-            end: Fecha fin, 'YYYY-MM-DD' o ISO 8601.
-            next_token: Token de paginacion devuelto por una llamada anterior.
+            limit: Records per page (max 25).
+            start: Start date, 'YYYY-MM-DD' or ISO 8601.
+            end: End date, 'YYYY-MM-DD' or ISO 8601.
+            next_token: Pagination token returned by a previous call.
         """
         return client.get_collection(
             "/v2/activity/sleep", limit=limit, start=start, end=end, next_token=next_token
@@ -33,5 +32,5 @@ def register(mcp: FastMCP, client: WhoopClient) -> None:
 
     @mcp.tool
     def get_sleep_by_id(sleep_id: str) -> dict[str, Any]:
-        """Obtiene una sesion de sueno concreta por su ID (UUID)."""
+        """Gets a specific sleep session by its ID (UUID)."""
         return client.get(f"/v2/activity/sleep/{sleep_id}")

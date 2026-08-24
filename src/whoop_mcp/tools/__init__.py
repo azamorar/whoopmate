@@ -1,14 +1,15 @@
-"""Registro de todas las tools del servidor."""
+"""Registration of all the server's tools."""
 
 from __future__ import annotations
 
 from fastmcp import FastMCP
 
 from ..client import WhoopClient
-from . import cycles, profile, recovery, sleep, workouts
+from . import auth, cycles, profile, recovery, sleep, workouts
 
 
 def register_all(mcp: FastMCP, client: WhoopClient) -> None:
+    auth.register(mcp, client)
     profile.register(mcp, client)
     cycles.register(mcp, client)
     recovery.register(mcp, client)

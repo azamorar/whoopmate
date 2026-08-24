@@ -1,7 +1,7 @@
 [project]
 name = "whoop-mcp"
 version = "0.1.0"
-description = "Servidor MCP (stdio) para la API publica de WHOOP (v2), construido con FastMCP"
+description = "MCP server (stdio) for the public WHOOP API (v2), built with FastMCP"
 authors = [{ name = "Andres Zamora", email = "azamorar01@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.11,<4.0"

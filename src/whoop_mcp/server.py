@@ -1,4 +1,4 @@
-"""Punto de entrada del servidor MCP (transporte stdio)."""
+"""MCP server entry point (stdio transport)."""
 
 from __future__ import annotations
 
@@ -10,11 +10,17 @@ from .tools import register_all
 mcp = FastMCP(
     name="whoop",
     instructions=(
-        "Servidor MCP para la API de WHOOP. Expone datos de la cuenta del "
-        "usuario: perfil, medidas corporales, ciclos (strain diario), "
-        "recuperaciones (recovery/HRV), sueno y entrenamientos. "
-        "Las fechas aceptan formato 'YYYY-MM-DD' o ISO 8601. Las colecciones "
-        "se paginan con `next_token` (max 25 registros por pagina)."
+        "MCP server for the WHOOP API. Exposes the user's account data: "
+        "profile, body measurements, cycles (daily strain), recovery "
+        "(recovery/HRV), sleep, and workouts. Dates accept 'YYYY-MM-DD' or "
+        "ISO 8601 format. Collections are paginated with `next_token` "
+        "(max 25 records per page).\n\n"
+        "Authentication: if a tool fails with an authentication error (or "
+        "this is the first time this server is used), call the "
+        "`whoop_login` tool to authorize access to the user's WHOOP account "
+        "(it opens their browser), then retry the original call. Use "
+        "`whoop_auth_status` to check the status with no side effects "
+        "before deciding whether authentication is needed."
     ),
 )
 
@@ -23,7 +29,7 @@ register_all(mcp, _client)
 
 
 def main() -> None:
-    # stdio es el transporte por defecto de FastMCP.
+    # stdio is FastMCP's default transport.
     mcp.run()
 
 

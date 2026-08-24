@@ -1,4 +1,4 @@
-"""Cliente HTTP sincrono para la API v2 de WHOOP."""
+"""Synchronous HTTP client for the WHOOP API v2."""
 
 from __future__ import annotations
 
@@ -12,19 +12,19 @@ from .config import API_BASE_URL, Settings, get_settings
 
 
 class WhoopAPIError(RuntimeError):
-    """Error devuelto por la API de WHOOP."""
+    """Error returned by the WHOOP API."""
 
 
 def to_iso_datetime(value: str | None, *, end_of_day: bool = False) -> str | None:
-    """Acepta 'YYYY-MM-DD' o un datetime ISO 8601 y devuelve ISO 8601 completo (UTC).
+    """Accepts 'YYYY-MM-DD' or an ISO 8601 datetime and returns full ISO 8601 (UTC).
 
-    WHOOP exige timestamps completos en los parametros start/end.
+    WHOOP requires full timestamps in the start/end parameters.
     """
     if not value:
         return None
     value = value.strip()
     try:
-        if len(value) == 10:  # solo fecha
+        if len(value) == 10:  # date only
             dt = datetime.strptime(value, "%Y-%m-%d").replace(tzinfo=timezone.utc)
             if end_of_day:
                 dt = dt.replace(hour=23, minute=59, second=59)
@@ -34,13 +34,13 @@ def to_iso_datetime(value: str | None, *, end_of_day: bool = False) -> str | Non
                 dt = dt.replace(tzinfo=timezone.utc)
     except ValueError as exc:
         raise WhoopAPIError(
-            f"Fecha invalida: {value!r}. Usa 'YYYY-MM-DD' o ISO 8601 completo."
+            f"Invalid date: {value!r}. Use 'YYYY-MM-DD' or full ISO 8601."
         ) from exc
     return dt.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
 class WhoopClient:
-    """Envoltorio de requests con autenticacion y reintento tras 401."""
+    """Wraps requests with authentication and a retry after 401."""
 
     def __init__(self) -> None:
         self._settings: Settings | None = None
@@ -48,12 +48,22 @@ class WhoopClient:
         self._session = requests.Session()
 
     def _ensure_ready(self) -> TokenManager:
-        # Inicializacion perezosa: asi el servidor arranca aunque falte el .env
-        # y el error de configuracion se muestra al invocar una tool.
+        # Lazy initialization: this lets the server boot even without .env,
+        # surfacing the config error only when a tool gets called.
         if self._token_manager is None:
             self._settings = get_settings()
             self._token_manager = TokenManager(self._settings)
         return self._token_manager
+
+    def get_token_manager(self) -> TokenManager:
+        """Exposes the TokenManager for the auth tools (whoop_login, whoop_auth_status)."""
+        return self._ensure_ready()
+
+    @property
+    def settings(self) -> Settings:
+        self._ensure_ready()
+        assert self._settings is not None
+        return self._settings
 
     def get(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         manager = self._ensure_ready()
@@ -66,22 +76,21 @@ class WhoopClient:
             url, params=clean_params, headers=self._auth_header(token), timeout=30
         )
         if response.status_code == 401:
-            # Token revocado o caducado antes de tiempo: refresca y reintenta una vez.
+            # Token revoked or expired early: refresh and retry once.
             token = manager.force_refresh()
             response = self._session.get(
                 url, params=clean_params, headers=self._auth_header(token), timeout=30
             )
 
         if response.status_code == 404:
-            raise WhoopAPIError(f"Recurso no encontrado: {path}")
+            raise WhoopAPIError(f"Resource not found: {path}")
         if response.status_code == 429:
             raise WhoopAPIError(
-                "Limite de peticiones de la API de WHOOP alcanzado (429). "
-                "Espera un momento antes de reintentar."
+                "WHOOP API rate limit reached (429). Wait a moment before retrying."
             )
         if response.status_code >= 400:
             raise WhoopAPIError(
-                f"WHOOP devolvio {response.status_code} en {path}: {response.text}"
+                f"WHOOP returned {response.status_code} from {path}: {response.text}"
             )
         return response.json()
 
@@ -94,9 +103,9 @@ class WhoopClient:
         end: str | None = None,
         next_token: str | None = None,
     ) -> dict[str, Any]:
-        """GET sobre un endpoint de coleccion con paginacion estandar de WHOOP.
+        """GET on a collection endpoint using WHOOP's standard pagination.
 
-        La API limita `limit` a 25 por pagina; `next_token` permite seguir paginando.
+        The API caps `limit` at 25 per page; `next_token` continues paging.
         """
         return self.get(
             path,
